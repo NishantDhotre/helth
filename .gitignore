@@ -140,3 +140,5 @@ vite.config.ts.timestamp-*
 
 Docs/
 AGENTS.md
+
+.expo/
