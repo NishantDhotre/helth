@@ -31,11 +31,12 @@ interface ChatStateSlice {
   isLoading: boolean;
   dailyCardData: DailyCardData | null;
   pendingImageBase64: string | null;
+  pendingImageUri: string | null;
 }
 
 interface ChatStoreState {
   chats: Record<ChatType, ChatStateSlice>;
-  setPendingImage(chatType: ChatType, base64: string | null): void;
+  setPendingImage(chatType: ChatType, base64: string | null, uri: string | null): void;
   send(chatType: ChatType, text: string, imageBase64?: string | null): Promise<void>;
   fetchDailyCard(chatType: ChatType): Promise<void>;
 }
@@ -45,6 +46,7 @@ const initialSlice: ChatStateSlice = {
   isLoading: false,
   dailyCardData: null,
   pendingImageBase64: null,
+  pendingImageUri: null,
 };
 
 function createId() {
@@ -58,13 +60,14 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     overall: { ...initialSlice },
   },
 
-  setPendingImage(chatType, base64) {
+  setPendingImage(chatType, base64, uri) {
     set((state) => ({
       chats: {
         ...state.chats,
         [chatType]: {
           ...state.chats[chatType],
           pendingImageBase64: base64,
+          pendingImageUri: uri,
         },
       },
     }));
@@ -157,6 +160,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       role: 'user',
       text: trimmed || '',
       createdAt: now,
+      imageThumbnailUri: slice.pendingImageUri || undefined,
     };
 
     set({
@@ -167,6 +171,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           messages: [...slice.messages, userMessage],
           isLoading: true,
           pendingImageBase64: null,
+          pendingImageUri: null,
         },
       },
     });

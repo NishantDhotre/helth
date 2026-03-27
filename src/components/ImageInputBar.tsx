@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Modal } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Modal, Image } from 'react-native';
 import { useChatStore } from '../store/chatStore';
 import type { ChatType } from '../storage/types';
 import { pickImage } from '../core/imageUtils';
@@ -12,6 +12,7 @@ export const ImageInputBar: React.FC<Props> = ({ chatType }) => {
   const [text, setText] = useState('');
   const [sheetVisible, setSheetVisible] = useState(false);
   const pendingImageBase64 = useChatStore((s) => s.chats[chatType].pendingImageBase64);
+  const pendingImageUri = useChatStore((s) => s.chats[chatType].pendingImageUri);
   const setPendingImage = useChatStore((s) => s.setPendingImage);
   const send = useChatStore((s) => s.send);
 
@@ -24,9 +25,9 @@ export const ImageInputBar: React.FC<Props> = ({ chatType }) => {
 
   const openPicker = (source: 'camera' | 'gallery') => {
     setSheetVisible(false);
-    pickImage(source).then((base64) => {
-      if (base64) {
-        setPendingImage(chatType, base64);
+    pickImage(source).then((res) => {
+      if (res) {
+        setPendingImage(chatType, res.base64, res.uri);
       }
     });
   };
@@ -49,6 +50,15 @@ export const ImageInputBar: React.FC<Props> = ({ chatType }) => {
           </View>
         </View>
       </Modal>
+
+      {pendingImageUri && (
+        <View style={styles.thumbnailContainer}>
+          <Image source={{ uri: pendingImageUri }} style={styles.thumbnail} />
+          <TouchableOpacity style={styles.clearButton} onPress={() => setPendingImage(chatType, null, null)}>
+            <Text style={styles.clearText}>×</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.inner}>
         <TouchableOpacity onPress={() => setSheetVisible(true)} style={styles.iconButton}>
@@ -144,6 +154,32 @@ const styles = StyleSheet.create({
   sheetCancelText: {
     fontSize: 15,
     color: '#9ca3af',
+  },
+  thumbnailContainer: {
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+    position: 'relative',
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+  },
+  clearButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#374151',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

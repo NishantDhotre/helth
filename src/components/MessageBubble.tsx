@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import type { ChatMessage } from '../store/chatStore';
 
@@ -12,6 +12,9 @@ export const MessageBubble: React.FC<Props> = ({ message }) => {
   return (
     <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
       <View style={[styles.bubble, isUser ? styles.userBubble : styles.assistantBubble]}>
+        {message.imageThumbnailUri && (
+          <Image source={{ uri: message.imageThumbnailUri }} style={styles.image} />
+        )}
         <Markdown style={markdownStyles}>{message.text}</Markdown>
       </View>
     </View>
@@ -40,6 +43,12 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     backgroundColor: '#111827',
+  },
+  image: {
+    width: 150,
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
   },
 });
 

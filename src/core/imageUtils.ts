@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import type { ChatType } from '../storage/types';
 
-export async function pickImage(source: 'camera' | 'gallery'): Promise<string | null> {
+export async function pickImage(source: 'camera' | 'gallery'): Promise<{ base64: string; uri: string } | null> {
   const result =
     source === 'camera'
       ? await ImagePicker.launchCameraAsync({
@@ -16,7 +16,7 @@ export async function pickImage(source: 'camera' | 'gallery'): Promise<string | 
         });
 
   if (result.canceled || !result.assets[0].base64) return null;
-  return result.assets[0].base64;
+  return { base64: result.assets[0].base64, uri: result.assets[0].uri };
 }
 
 export function getDefaultPhotoPrompt(chatType: ChatType): string {
