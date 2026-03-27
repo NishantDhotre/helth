@@ -10,11 +10,12 @@ import { PendingSuggestionBanner } from '../components/PendingSuggestionBanner';
 
 interface ChatScreenProps {
   chatType: ChatType;
+  initialAction?: string;
   onBack: () => void;
   onSettings?: () => void;
 }
 
-export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, onBack, onSettings }) => {
+export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, initialAction, onBack, onSettings }) => {
   const title =
     chatType === 'meals' ? 'Meals Chat' : chatType === 'selfcare' ? 'Self Care Chat' : 'Overall Chat';
 
@@ -24,6 +25,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, onBack, onSett
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
 
+  const hasSentInitialRef = React.useRef(false);
+
   useEffect(() => {
     useChatStore.getState().fetchDailyCard(chatType);
     SecureStore.getItemAsync('gemini_api_key').then((val) => {
@@ -31,7 +34,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, onBack, onSett
         setApiKeyVisible(true);
       }
     });
-  }, [chatType]);
+
+    if (initialAction && !hasSentInitialRef.current) {
+      hasSentInitialRef.current = true;
+      useChatStore.getState().send(chatType, initialAction);
+    }
+  }, [chatType, initialAction]);
 
   const handleSaveApiKey = async () => {
     const trimmed = apiKeyInput.trim();

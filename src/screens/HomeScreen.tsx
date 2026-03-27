@@ -5,14 +5,17 @@ import { ChatCard } from '../components/ChatCard';
 import type { ChatType } from '../storage/types';
 import { SettingsScreen } from './SettingsScreen';
 import { readPendingSuggestions } from '../storage/pendingSuggestions';
+import * as Notifications from 'expo-notifications';
+import { computeAndScheduleNotifications } from '../notifications/scheduler';
 
-type Screen = { type: 'home' } | { type: 'chat'; chatType: ChatType } | { type: 'settings'; chatType: ChatType };
+type Screen = { type: 'home' } | { type: 'chat'; chatType: ChatType; initialAction?: string } | { type: 'settings'; chatType: ChatType };
 
 export const HomeScreen: React.FC = () => {
   const [screen, setScreen] = useState<Screen>({ type: 'home' });
   const [pending, setPending] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    computeAndScheduleNotifications();
     readPendingSuggestions().then(res => {
       const p: Record<string, boolean> = {};
       res.suggestions.forEach(s => {
@@ -23,6 +26,16 @@ export const HomeScreen: React.FC = () => {
       setPending(p);
     });
   }, [screen]);
+
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
+  useEffect(() => {
+    if (lastNotificationResponse) {
+      const data = lastNotificationResponse.notification.request.content.data;
+      if (data?.chatType && data?.action) {
+        setScreen({ type: 'chat', chatType: data.chatType as ChatType, initialAction: data.action as string });
+      }
+    }
+  }, [lastNotificationResponse]);
 
   if (screen.type === 'settings') {
     return (
@@ -37,6 +50,7 @@ export const HomeScreen: React.FC = () => {
     return (
       <ChatScreen
         chatType={screen.chatType}
+        initialAction={screen.initialAction}
         onBack={() => setScreen({ type: 'home' })}
         onSettings={() => setScreen({ type: 'settings', chatType: screen.chatType })}
       />
