@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ChatScreen } from './ChatScreen';
 import { ChatCard } from '../components/ChatCard';
 import type { ChatType } from '../storage/types';
 import { SettingsScreen } from './SettingsScreen';
+import { readPendingSuggestions } from '../storage/pendingSuggestions';
 
 type Screen = { type: 'home' } | { type: 'chat'; chatType: ChatType } | { type: 'settings'; chatType: ChatType };
 
 export const HomeScreen: React.FC = () => {
   const [screen, setScreen] = useState<Screen>({ type: 'home' });
+  const [pending, setPending] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    readPendingSuggestions().then(res => {
+      const p: Record<string, boolean> = {};
+      res.suggestions.forEach(s => {
+        if (s.status === 'pending') {
+          p[s.target_chat] = true;
+        }
+      });
+      setPending(p);
+    });
+  }, [screen]);
 
   if (screen.type === 'settings') {
     return (
@@ -39,18 +53,21 @@ export const HomeScreen: React.FC = () => {
           title="Meals"
           subtitle="Plan the day and log food."
           onPress={() => setScreen({ type: 'chat', chatType: 'meals' })}
+          hasPendingSuggestion={pending.meals}
         />
         <ChatCard
           chatType="selfcare"
           title="Self Care"
           subtitle="Skincare, beard & hair routines."
           onPress={() => setScreen({ type: 'chat', chatType: 'selfcare' })}
+          hasPendingSuggestion={pending.selfcare}
         />
         <ChatCard
           chatType="overall"
           title="Overall"
-          subtitle="Big picture — coming soon."
-          disabled
+          subtitle="Big picture & fitness trends."
+          onPress={() => setScreen({ type: 'chat', chatType: 'overall' })}
+          hasPendingSuggestion={pending.overall}
         />
       </View>
     </View>

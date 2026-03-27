@@ -4,6 +4,7 @@ import { readNutritionLog } from '../storage/nutritionLog';
 import { readSelfCareContext } from '../storage/selfcareContext';
 import { readSelfCareInventory } from '../storage/selfcareInventory';
 import { readSelfCareLog } from '../storage/selfcareLog';
+import { readOverallContext } from '../storage/overallContext';
 import { getPendingForChat } from '../storage/pendingSuggestions';
 import type { ChatType } from '../storage/types';
 import { calculateTDEE } from './tdeeCalculator';
@@ -111,8 +112,42 @@ export async function assembleSelfCareContext(): Promise<string> {
   ].join('\n');
 }
 
-// Stub for Sprint 3
+// assembled Overall
 export async function assembleOverallContext(): Promise<string> {
-  return 'OVERALL CONTEXT NOT IMPLEMENTED YET';
+  const profile = await readProfile();
+  const overallCtx = await readOverallContext();
+  const mealsCtx = await readMealsContext();
+  const nutritionLog = await readNutritionLog();
+  const selfcareCtx = await readSelfCareContext();
+  const selfcareLog = await readSelfCareLog();
+  const inventory = await readSelfCareInventory();
+  const pending = await getPendingForChat('overall');
+
+  const { isoDate, weekday } = getTodayInfo();
+  const gymDay = isGymDay(profile.fitness.gym_days, weekday);
+  const todayLine = `${weekday} · ${gymDay ? 'Gym Day' : 'Rest Day'} · ${isoDate}`;
+
+  return [
+    '=== TODAY ===',
+    todayLine,
+    '',
+    '=== PROFILE / WEIGHT HISTORY ===',
+    JSON.stringify(profile, null, 2),
+    '',
+    '=== OVERALL CONTEXT (Journey/Milestones/Observations) ===',
+    JSON.stringify(overallCtx, null, 2),
+    '',
+    '=== MEALS ===',
+    JSON.stringify(mealsCtx, null, 2),
+    JSON.stringify(nutritionLog, null, 2),
+    '',
+    '=== SELF CARE ===',
+    JSON.stringify(selfcareCtx, null, 2),
+    JSON.stringify(inventory, null, 2),
+    JSON.stringify(selfcareLog, null, 2),
+    '',
+    '=== PENDING SUGGESTIONS (OVERALL ALERTS) ===',
+    JSON.stringify(pending, null, 2),
+  ].join('\n');
 }
 

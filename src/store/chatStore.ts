@@ -6,6 +6,7 @@ import { readProfile } from '../storage/profile';
 import { readNutritionLog } from '../storage/nutritionLog';
 import { readSelfCareLog } from '../storage/selfcareLog';
 import { readSelfCareContext } from '../storage/selfcareContext';
+import { readOverallContext } from '../storage/overallContext';
 import { calculateTDEE } from '../core/tdeeCalculator';
 
 export type MessageRole = 'user' | 'assistant';
@@ -70,7 +71,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   },
 
   async fetchDailyCard(chatType) {
-    if (chatType === 'overall') return;
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     const fullWeekday = now.toLocaleDateString('en-GB', { weekday: 'long' });
@@ -120,6 +120,22 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         const nextLine = tonightTasks ? `Tonight: ${tonightTasks}` : 'Tonight: standard routine';
 
         set((state) => ({ chats: { ...state.chats, selfcare: { ...state.chats.selfcare, dailyCardData: { titleLine, caloriesLine, proteinLine, nextLine } } } }));
+      } catch (e) {
+      }
+    } else if (chatType === 'overall') {
+      try {
+        const profile = await readProfile();
+        const ctx = await readOverallContext();
+        
+        const weightText = ctx.weight_history.length > 0 ? 
+          `${ctx.weight_history[ctx.weight_history.length - 1].weight_kg} kg` : 
+          'No weight logged';
+
+        const titleLine = `Week ${ctx.fitness_journey.current_week} · Overall`;
+        const caloriesLine = `Current Weight: ${weightText}`;
+        const proteinLine = `Goal: ${profile.fitness.goal}`;
+        
+        set((state) => ({ chats: { ...state.chats, overall: { ...state.chats.overall, dailyCardData: { titleLine, caloriesLine, proteinLine } } } }));
       } catch (e) {
       }
     }

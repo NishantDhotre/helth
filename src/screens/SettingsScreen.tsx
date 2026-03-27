@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
-import type { ChatType, SelfCareInventory } from '../storage/types';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, TextInput } from 'react-native';
+import type { ChatType, SelfCareInventory, OverallContext, Profile, PendingSuggestions } from '../storage/types';
 import { readSelfCareInventory, setItemStock } from '../storage/selfcareInventory';
 import { SelfCareLogViewer } from '../components/SelfCareLogViewer';
+import { readOverallContext, addWeightEntry } from '../storage/overallContext';
+import { readProfile, updateField } from '../storage/profile';
+import { readPendingSuggestions } from '../storage/pendingSuggestions';
 
 interface Props {
   chatType: ChatType;
@@ -28,9 +31,7 @@ export const SettingsScreen: React.FC<Props> = ({ chatType, onBack }) => {
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
         {chatType === 'selfcare' && <SelfCareSettings />}
         {chatType === 'meals' && <MealsSettings />}
-        {chatType === 'overall' && (
-          <Text style={styles.placeholder}>Overall settings coming in Sprint 3.</Text>
-        )}
+        {chatType === 'overall' && <OverallSettings />}
       </ScrollView>
     </View>
   );
@@ -93,6 +94,104 @@ const MealsSettings: React.FC = () => {
     </View>
   );
 };
+
+// ────── Overall Settings ──────
+
+const OverallSettings: React.FC = () => {
+  const [ctx, setCtx] = useState<OverallContext | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [pending, setPending] = useState<PendingSuggestions | null>(null);
+
+  const [newWeight, setNewWeight] = useState('');
+  const [goalInput, setGoalInput] = useState('');
+
+  const loadData = async () => {
+    const [c, p, s] = await Promise.all([
+      readOverallContext(),
+      readProfile(),
+      readPendingSuggestions()
+    ]);
+    setCtx(c);
+    setProfile(p);
+    setPending(s);
+    setGoalInput(p.fitness.goal);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleAddWeight = async () => {
+    const w = parseFloat(newWeight);
+    if (!isNaN(w)) {
+      await addWeightEntry(new Date().toISOString().split('T')[0], w);
+      await updateField('personal.weight_kg', w);
+      setNewWeight('');
+      loadData();
+    }
+  };
+
+  const handleSaveGoal = async () => {
+    if (goalInput.trim()) {
+      await updateField('fitness.goal', goalInput.trim());
+      loadData();
+    }
+  };
+
+  if (!ctx || !profile || !pending) return <Text style={styles.placeholder}>Loading...</Text>;
+
+  const weightHistory = [...ctx.weight_history].reverse().slice(0, 7);
+
+  return (
+    <View>
+      <Text style={styles.sectionTitle}>Weight Log</Text>
+      <View style={styles.inputRow}>
+        <TextInput 
+          style={styles.textInput} 
+          placeholder="New weight (kg)" 
+          placeholderTextColor="#6b7280"
+          value={newWeight}
+          onChangeText={setNewWeight}
+          keyboardType="numeric"
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleAddWeight}>
+          <Text style={styles.addButtonLabel}>Add</Text>
+        </TouchableOpacity>
+      </View>
+      {weightHistory.map((w, i) => (
+        <View key={i} style={styles.inventoryRow}>
+          <View style={styles.inventoryTextCol}>
+            <Text style={styles.inventoryName}>{w.date}</Text>
+          </View>
+          <Text style={styles.inventoryName}>{w.weight_kg} kg</Text>
+        </View>
+      ))}
+
+      <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Fitness Goal</Text>
+      <View style={styles.inputRow}>
+        <TextInput 
+          style={styles.textInput} 
+          value={goalInput}
+          onChangeText={setGoalInput}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleSaveGoal}>
+          <Text style={styles.addButtonLabel}>Save</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Cross-Chat Suggestions</Text>
+      {pending.suggestions.length === 0 ? (
+        <Text style={styles.placeholder}>No suggestions generated yet.</Text>
+      ) : (
+        pending.suggestions.map((s) => (
+          <View key={s.id} style={styles.suggestionRow}>
+            <Text style={styles.suggestionHeader}>{s.target_chat.toUpperCase()} · {s.status.toUpperCase()}</Text>
+            <Text style={styles.suggestionText}>{s.suggestion}</Text>
+          </View>
+        ))
+      )}
+    </View>
+  );
+};
+
 
 // ────── Styles ──────
 
@@ -163,5 +262,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9ca3af',
     lineHeight: 22,
+    marginTop: 8,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    marginTop: 8,
+    gap: 8,
+  },
+  textInput: {
+    flex: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1f2937',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#e5e7eb',
+    fontSize: 14,
+    backgroundColor: '#0b1120',
+  },
+  addButton: {
+    backgroundColor: '#4f46e5',
+    borderRadius: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  addButtonLabel: {
+    color: '#e0e7ff',
+    fontWeight: '600',
+  },
+  suggestionRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#111827',
+  },
+  suggestionHeader: {
+    fontWeight: '600',
+    fontSize: 12,
+    color: '#c7d2fe',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    lineHeight: 20,
   },
 });

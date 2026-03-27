@@ -6,6 +6,7 @@ import { useChatStore } from '../store/chatStore';
 import { DailyCard } from '../components/DailyCard';
 import { MessageBubble } from '../components/MessageBubble';
 import { ImageInputBar } from '../components/ImageInputBar';
+import { PendingSuggestionBanner } from '../components/PendingSuggestionBanner';
 
 interface ChatScreenProps {
   chatType: ChatType;
@@ -40,7 +41,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, onBack, onSett
     setApiKeyInput('');
   };
 
-  const isChatEnabled = chatType === 'meals' || chatType === 'selfcare';
+  const isChatEnabled = chatType === 'meals' || chatType === 'selfcare' || chatType === 'overall';
 
   return (
     <View style={styles.container}>
@@ -80,6 +81,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, onBack, onSett
         {isChatEnabled ? (
           <>
             <DailyCard data={dailyCardData} />
+            <PendingSuggestionBanner chatType={chatType} />
             <FlatList
               data={messages}
               keyExtractor={(item) => item.id}
