@@ -1,6 +1,12 @@
 import * as FileSystem from 'expo-file-system';
 
-export const CONTEXT_DIR = FileSystem.documentDirectory + 'context/';
+const BASE_DIR = FileSystem.documentDirectory ?? FileSystem.cacheDirectory;
+
+if (!BASE_DIR) {
+  throw new Error('Unable to determine base directory for context storage.');
+}
+
+export const CONTEXT_DIR = BASE_DIR + 'context/';
 
 export const FILE_PATHS = {
   profile: CONTEXT_DIR + 'profile.json',

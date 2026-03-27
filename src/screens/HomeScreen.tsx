@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { ChatScreen } from './ChatScreen';
+import { ChatCard } from '../components/ChatCard';
+import type { ChatType } from '../storage/types';
+import { SettingsScreen } from './SettingsScreen';
 
-type ChatType = 'meals' | 'selfcare' | 'overall';
+type Screen = { type: 'home' } | { type: 'chat'; chatType: ChatType } | { type: 'settings'; chatType: ChatType };
 
 export const HomeScreen: React.FC = () => {
-  const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
+  const [screen, setScreen] = useState<Screen>({ type: 'home' });
 
-  if (selectedChat) {
-    return <ChatScreen chatType={selectedChat} onBack={() => setSelectedChat(null)} />;
+  if (screen.type === 'settings') {
+    return (
+      <SettingsScreen
+        chatType={screen.chatType}
+        onBack={() => setScreen({ type: 'chat', chatType: screen.chatType })}
+      />
+    );
+  }
+
+  if (screen.type === 'chat') {
+    return (
+      <ChatScreen
+        chatType={screen.chatType}
+        onBack={() => setScreen({ type: 'home' })}
+        onSettings={() => setScreen({ type: 'settings', chatType: screen.chatType })}
+      />
+    );
   }
 
   return (
@@ -16,18 +34,24 @@ export const HomeScreen: React.FC = () => {
       <Text style={styles.title}>Helth</Text>
       <Text style={styles.subtitle}>Three specialised chats</Text>
       <View style={styles.cards}>
-        <TouchableOpacity style={styles.card} onPress={() => setSelectedChat('meals')}>
-          <Text style={styles.cardTitle}>Meals</Text>
-          <Text style={styles.cardBody}>Plan and track your meals.</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.card, styles.cardDisabled]}>
-          <Text style={styles.cardTitle}>Self Care</Text>
-          <Text style={styles.cardBody}>Coming soon.</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.card, styles.cardDisabled]}>
-          <Text style={styles.cardTitle}>Overall</Text>
-          <Text style={styles.cardBody}>Coming soon.</Text>
-        </TouchableOpacity>
+        <ChatCard
+          chatType="meals"
+          title="Meals"
+          subtitle="Plan the day and log food."
+          onPress={() => setScreen({ type: 'chat', chatType: 'meals' })}
+        />
+        <ChatCard
+          chatType="selfcare"
+          title="Self Care"
+          subtitle="Skincare, beard & hair routines."
+          onPress={() => setScreen({ type: 'chat', chatType: 'selfcare' })}
+        />
+        <ChatCard
+          chatType="overall"
+          title="Overall"
+          subtitle="Big picture — coming soon."
+          disabled
+        />
       </View>
     </View>
   );
@@ -52,25 +76,6 @@ const styles = StyleSheet.create({
   },
   cards: {
     marginTop: 32,
-    gap: 16,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    backgroundColor: '#111827',
-  },
-  cardDisabled: {
-    opacity: 0.5,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#f9fafb',
-  },
-  cardBody: {
-    marginTop: 4,
-    fontSize: 14,
-    color: '#9ca3af',
+    rowGap: 16,
   },
 });
-

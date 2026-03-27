@@ -136,3 +136,86 @@ export interface PendingSuggestions {
   suggestions: Suggestion[];
 }
 
+// ─── Self Care Types ───
+
+export interface SelfCareRoutineStep {
+  step: string;
+  product_key: string;
+  note?: string;
+  critical?: boolean;
+}
+
+export interface SelfCareWeeklyActive {
+  task: string;
+  day?: string;
+  days?: string[];
+  time: string;
+  product_key?: string;
+  product_keys?: string[];
+  gap_after_shaving_hrs?: number;
+  gap_after_dermaroll_hrs?: number;
+  gap_before_shaving_hrs?: number;
+  no_actives_after_hrs?: number;
+  cannot_combine_with?: string;
+  advance_warning_hrs?: number;
+  advance_warning_text?: string;
+  note?: string;
+}
+
+export interface SelfCareConstraints {
+  never_same_night: string[];
+  post_shave_blackout_hrs: number;
+  post_dermaroll_blackout_hrs: number;
+  shaving_day: string;
+  last_shave_date: string | null;
+  last_dermaroll_date: string | null;
+}
+
+export interface SelfCarePattern {
+  observation: string;
+  confidence?: string;
+}
+
+export interface SelfCareContext {
+  skin: {
+    type: string;
+    notes: string;
+  };
+  routine: {
+    morning: SelfCareRoutineStep[];
+    evening: SelfCareRoutineStep[];
+  };
+  weekly_actives: SelfCareWeeklyActive[];
+  constraints: SelfCareConstraints;
+  patterns: {
+    learned: SelfCarePattern[];
+  };
+}
+
+export interface SelfCareInventoryItem {
+  display_name: string;
+  in_stock: boolean;
+}
+
+export interface SelfCareInventory {
+  last_updated: string;
+  items: Record<string, SelfCareInventoryItem>;
+}
+
+export type SelfCareRoutineStatus = 'completed' | 'skipped' | 'partial';
+
+export interface SelfCareLogDay {
+  date: string;
+  day_type: 'gym' | 'rest' | string;
+  skincare_morning: SelfCareRoutineStatus | null;
+  skincare_evening: SelfCareRoutineStatus | null;
+  actives_used: string[];
+  beard_done: boolean;
+  shaved: boolean;
+  notes: string | null;
+}
+
+export interface SelfCareLog {
+  days: SelfCareLogDay[];
+}
+
