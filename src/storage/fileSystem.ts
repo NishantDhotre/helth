@@ -1,10 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 
-const BASE_DIR = FileSystem.documentDirectory ?? FileSystem.cacheDirectory;
-
-if (!BASE_DIR) {
-  throw new Error('Unable to determine base directory for context storage.');
-}
+const BASE_DIR = FileSystem.documentDirectory || FileSystem.cacheDirectory || '';
 
 export const CONTEXT_DIR = BASE_DIR + 'context/';
 
@@ -20,6 +16,10 @@ export const FILE_PATHS = {
 };
 
 export async function ensureContextDir(): Promise<void> {
+  if (!FileSystem.documentDirectory && !FileSystem.cacheDirectory) {
+    throw new Error('FileSystem runtime not ready. documentDirectory and cacheDirectory are both null.');
+  }
+
   const info = await FileSystem.getInfoAsync(CONTEXT_DIR);
   if (!info.exists) {
     await FileSystem.makeDirectoryAsync(CONTEXT_DIR, { intermediates: true });

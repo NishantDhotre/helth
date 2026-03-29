@@ -3,7 +3,8 @@ import { readSelfCareContext } from '../storage/selfcareContext';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -42,7 +43,11 @@ export async function computeAndScheduleNotifications() {
       body: 'Your nutrition and fitness plan for the day is ready. Tap to view.',
       data: { action: 'GENERATE_MORNING_BRIEF', chatType: 'meals' },
     },
-    trigger: { hour: 8, minute: 0, repeats: true },
+    trigger: { 
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour: 8, 
+      minute: 0 
+    },
   });
 
   // 2. Evening Check-in (9:00 PM daily)
@@ -52,7 +57,11 @@ export async function computeAndScheduleNotifications() {
       body: 'Time to log your day and see your progress. Tap to open Overall.',
       data: { action: 'EVENING_CHECKIN', chatType: 'overall' },
     },
-    trigger: { hour: 21, minute: 0, repeats: true },
+    trigger: { 
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour: 21, 
+      minute: 0 
+    },
   });
 
   // 3. Advance Warnings (from selfcare_context.weekly_actives)
@@ -73,10 +82,10 @@ export async function computeAndScheduleNotifications() {
                 data: { action: 'WHAT_IS_MY_ROUTINE_TONIGHT', chatType: 'selfcare' }, // Gentle nudge
               },
               trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
                 weekday: previousDayNum,
                 hour: 20,
                 minute: 0,
-                repeats: true,
               },
             });
           }
