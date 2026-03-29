@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import type { ChatType } from '../storage/types';
 import { useChatStore } from '../store/chatStore';
@@ -52,7 +52,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, initialAction,
   const isChatEnabled = chatType === 'meals' || chatType === 'selfcare' || chatType === 'overall';
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior="padding"
+    >
       <Modal transparent visible={apiKeyVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -110,7 +113,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ chatType, initialAction,
           </View>
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
