@@ -6,15 +6,19 @@ import { SelfCareLogViewer } from '../components/SelfCareLogViewer';
 import { readOverallContext, addWeightEntry, type OverallContext } from '../storage/overallContext';
 import { readProfile, updateField } from '../storage/profile';
 import { readPendingSuggestions } from '../storage/pendingSuggestions';
+import * as SecureStore from 'expo-secure-store';
 
 interface Props {
-  chatType: ChatType;
+  chatType?: ChatType;
+  isGlobal?: boolean;
   onBack: () => void;
 }
 
-export const SettingsScreen: React.FC<Props> = ({ chatType, onBack }) => {
+export const SettingsScreen: React.FC<Props> = ({ chatType, isGlobal, onBack }) => {
   const title =
-    chatType === 'meals'
+    isGlobal
+      ? 'Global Settings'
+      : chatType === 'meals'
       ? 'Meals Settings'
       : chatType === 'selfcare'
         ? 'Self Care Settings'
@@ -29,9 +33,10 @@ export const SettingsScreen: React.FC<Props> = ({ chatType, onBack }) => {
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-        {chatType === 'selfcare' && <SelfCareSettings />}
-        {chatType === 'meals' && <MealsSettings />}
-        {chatType === 'overall' && <OverallSettings />}
+        {isGlobal && <GlobalSettings />}
+        {chatType === 'selfcare' && !isGlobal && <SelfCareSettings />}
+        {chatType === 'meals' && !isGlobal && <MealsSettings />}
+        {chatType === 'overall' && !isGlobal && <OverallSettings />}
       </ScrollView>
     </View>
   );
@@ -91,6 +96,78 @@ const MealsSettings: React.FC = () => {
         Room items, ordering preferences, and PG schedule are managed through the chat. Tell the Meals
         assistant about changes and it will update automatically.
       </Text>
+    </View>
+  );
+};
+
+// ────── Global Settings ──────
+
+const GlobalSettings: React.FC = () => {
+  const [nameInput, setNameInput] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [loaded, setLoaded] = useState(false);
+
+  const loadData = async () => {
+    const p = await readProfile();
+    setNameInput(p.personal.name || '');
+    const key = await SecureStore.getItemAsync('gemini_api_key');
+    if (key) setApiKeyInput(key);
+    setLoaded(true);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (trimmed) {
+      await updateField('personal.name', trimmed);
+      loadData();
+    }
+  };
+
+  const handleSaveApiKey = async () => {
+    const trimmed = apiKeyInput.trim();
+    if (trimmed) {
+      await SecureStore.setItemAsync('gemini_api_key', trimmed);
+    } else {
+      await SecureStore.deleteItemAsync('gemini_api_key');
+    }
+    loadData();
+  };
+
+  if (!loaded) return <Text style={styles.placeholder}>Loading...</Text>;
+
+  return (
+    <View>
+      <Text style={styles.sectionTitle}>App Configuration</Text>
+      <Text style={styles.sectionSubtitle}>Manage your AI connection and identity.</Text>
+      
+      <View style={styles.inputRow}>
+        <TextInput 
+          style={styles.textInput} 
+          placeholder="Your Name" 
+          placeholderTextColor="#6b7280"
+          value={nameInput}
+          onChangeText={setNameInput}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleSaveName}>
+          <Text style={styles.addButtonLabel}>Save</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.inputRow}>
+        <TextInput 
+          style={styles.textInput} 
+          placeholder="Gemini API Key (leave blank to delete)" 
+          placeholderTextColor="#6b7280"
+          value={apiKeyInput}
+          onChangeText={setApiKeyInput}
+          secureTextEntry
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleSaveApiKey}>
+          <Text style={styles.addButtonLabel}>Save</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

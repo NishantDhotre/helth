@@ -208,6 +208,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
       await get().fetchDailyCard(chatType);
     } catch (e: any) {
+      console.error('Chat error:', e);
       const latestState = get();
       const latestSlice = latestState.chats[chatType];
 

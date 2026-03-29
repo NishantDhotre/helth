@@ -17,6 +17,7 @@ const PROFILE_SEED: Profile = {
     living_situation: 'PG',
     wake_time: '07:30',
     sleep_time: '00:30',
+    name: 'User',
   },
   fitness: {
     goal: 'fat loss with muscle retention',

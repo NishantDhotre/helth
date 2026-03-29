@@ -12,6 +12,7 @@ export interface PersonalInfo {
   living_situation: string;
   wake_time: string;
   sleep_time: string;
+  name?: string;
 }
 
 export interface FitnessInfo {
