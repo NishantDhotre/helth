@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, TextInput } from 'react-native';
-import type { ChatType, SelfCareInventory, OverallContext, Profile, PendingSuggestions } from '../storage/types';
+import type { ChatType, SelfCareInventory, Profile, PendingSuggestions } from '../storage/types';
 import { readSelfCareInventory, setItemStock } from '../storage/selfcareInventory';
 import { SelfCareLogViewer } from '../components/SelfCareLogViewer';
-import { readOverallContext, addWeightEntry } from '../storage/overallContext';
+import { readOverallContext, addWeightEntry, type OverallContext } from '../storage/overallContext';
 import { readProfile, updateField } from '../storage/profile';
 import { readPendingSuggestions } from '../storage/pendingSuggestions';
 

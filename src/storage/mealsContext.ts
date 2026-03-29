@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { FILE_PATHS, ensureContextDir, readJSON, safeWriteJSON } from './fileSystem';
 import type { MealsContext } from './types';
 

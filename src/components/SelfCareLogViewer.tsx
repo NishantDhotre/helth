@@ -29,7 +29,7 @@ export const SelfCareLogViewer: React.FC = () => {
     setLog(newLog);
   };
 
-  const getStatusIcon = (status: SelfCareRoutineStatus) => {
+  const getStatusIcon = (status: SelfCareRoutineStatus | null) => {
     if (status === 'completed') return '✅';
     if (status === 'skipped') return '❌';
     if (status === 'partial') return '⚠️';
